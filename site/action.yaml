@@ -34,7 +34,11 @@ runs:
         if [[ "${root}" == "" ]]; then
             root=$(pwd)
         fi
+        printf "Root is ${root}\n"
+        ls ${root}
         echo "root=${root}" >> $GITHUB_ENV
+      shell: bash
+
     - name: Install Action Updater
       env:
         version: ${{ inputs.version }}
@@ -59,11 +63,14 @@ runs:
         action_path: ${{ github.action_path }}
         repo: ${{ github.repository }}
       run: |
+        printf "Contents of root:\n"  
+        ls ${root}
         docs_root=${root}/docs
         if [[ ! -d "${docs_root}" ]]; then
+            printf "/bin/bash ${action_path}/scripts/init-docs.sh ${root}/docs ${repo} ${branch}\n"
             /bin/bash ${action_path}/scripts/init-docs.sh ${root}/docs ${repo} ${branch}
         fi 
-        /bin/bash ${action_path}/scripts/generate.sh
+        /bin/bash ${action_path}/scripts/generate.sh ${root}
       shell: bash
 
     - name: Update Data
@@ -82,7 +89,7 @@ runs:
       shell: bash
 
     - name: Push Results
-      if: $(inputs.deploy == 'true')
+      if: ${{inputs.deploy == 'true'}}
       env:
         root: ${{ env.root }}
       run: |
@@ -92,3 +99,4 @@ runs:
         git add ${root}/docs/_data/data/*
         git commit -m "Automated push with new data results $(date '+%Y-%m-%d')" || exit 0
         git push origin main || exit 0
+      shell: bash
