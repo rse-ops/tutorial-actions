@@ -70,7 +70,7 @@ runs:
             printf "/bin/bash ${action_path}/scripts/init-docs.sh ${root}/docs ${repo} ${branch}\n"
             /bin/bash ${action_path}/scripts/init-docs.sh ${root}/docs ${repo} ${branch}
         fi 
-        /bin/bash ${action_path}/scripts/generate.sh
+        /bin/bash ${action_path}/scripts/generate.sh ${root}
       shell: bash
 
     - name: Update Data
