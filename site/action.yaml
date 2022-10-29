@@ -1,0 +1,94 @@
+name: "Site Generator with Contributor CI for RADIUSS Tutorial"
+description: "Update your contributor CI data for your RADIUSS site."
+branding:
+  icon: 'activity'
+  color: 'blue'
+inputs:
+  token:
+    description: GitHub token
+    required: false
+  cci_file:
+    description: Path to contributor-ci.yaml file (defaults to in root)
+    required: false
+    default: contributor-ci.yaml
+  branch:
+    description: Main repository branch with tutorials (defaults to main)
+    required: false
+    default: main
+  deploy:
+    description: Push changes
+    required: false
+    default: true
+  root:
+    description: Root of tutorials (defaults to repository root "tutorials" directory
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set Root of Tutorials
+      env:
+        root: ${{ inputs.root }}
+      run: |        
+        # Default to repository root if root undefined
+        if [[ "${root}" == "" ]]; then
+            root=$(pwd)
+        fi
+        echo "root=${root}" >> $GITHUB_ENV
+    - name: Install Action Updater
+      env:
+        version: ${{ inputs.version }}
+        cci_file: ${{ inputs.cci_file }}
+        root: ${{ env.root }}
+        action_path: ${{ github.action_path }}
+      run: |        
+        if [[ ! -f "${cci_file}" ]]; then
+            printf "Cannot find Contributor CI file ${cci_file}\n"
+            exit 1;
+        fi
+        pip install -r ${action_path}/requirements.txt
+        printf "python ${action_path}/scripts/update-cci.py --cci ${cci_file} --root ${root}\n"
+        python ${action_path}/scripts/update-cci.py --cci ${cci_file} --root ${root}
+        cat ${cci_file}
+      shell: bash
+
+    - name: Generate Tutorial Data
+      env:
+        branch: ${{ inputs.branch }}
+        root: ${{ env.root }}
+        action_path: ${{ github.action_path }}
+        repo: ${{ github.repository }}
+      run: |
+        docs_root=${root}/docs
+        if [[ ! -d "${docs_root}" ]]; then
+            /bin/bash ${action_path}/scripts/init-docs.sh ${root}/docs ${repo} ${branch}
+        fi 
+        /bin/bash ${action_path}/scripts/generate.sh
+      shell: bash
+
+    - name: Update Data
+      uses: vsoch/contributor-ci@0.0.15
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+      with: 
+        results_dir: ${{ env.root }}/docs/_data/
+        extract: repos repo_metadata topics languages releases stars activity_commits activity_lines
+        extract_save_format: year/month
+
+    - name: Check that results exist
+      env:
+        root: ${{ env.root }}
+      run: tree ${root}/docs/_data
+      shell: bash
+
+    - name: Push Results
+      if: $(inputs.deploy == 'true')
+      env:
+        root: ${{ env.root }}
+      run: |
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions@users.noreply.github.com"
+        git add ${root}/docs
+        git add ${root}/docs/_data/data/*
+        git commit -m "Automated push with new data results $(date '+%Y-%m-%d')" || exit 0
+        git push origin main || exit 0
