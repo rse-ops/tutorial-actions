@@ -65,6 +65,7 @@ runs:
         if [[ ! -d "${docs_root}" ]]; then
             /bin/bash ${action_path}/scripts/init-docs.sh ${root}/docs ${repo} ${branch}
         fi 
+        cat ${root}/docs/config.yml
         /bin/bash ${action_path}/scripts/generate.sh
       shell: bash
 
