@@ -35,6 +35,8 @@ runs:
             root=$(pwd)
         fi
         echo "root=${root}" >> $GITHUB_ENV
+      shell: bash
+
     - name: Install Action Updater
       env:
         version: ${{ inputs.version }}
@@ -82,7 +84,7 @@ runs:
       shell: bash
 
     - name: Push Results
-      if: $(inputs.deploy == 'true')
+      if: ${{inputs.deploy == 'true'}}
       env:
         root: ${{ env.root }}
       run: |
@@ -92,3 +94,4 @@ runs:
         git add ${root}/docs/_data/data/*
         git commit -m "Automated push with new data results $(date '+%Y-%m-%d')" || exit 0
         git push origin main || exit 0
+      shell: bash
