@@ -95,8 +95,10 @@ runs:
       run: |
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@users.noreply.github.com"
+        git config --global pull.rebase true
+
         git add ${root}/docs
         git add ${root}/docs/_data/data/*
         git commit -m "Automated push with new data results $(date '+%Y-%m-%d')" || exit 0
-        git push origin main || exit 0
+        git push origin main || (git pull origin main && git push origin main)
       shell: bash

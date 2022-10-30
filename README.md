@@ -31,11 +31,15 @@ and actions to include within to help you to deploy your tutorials.
 ## ⭐️ Instructions for Setup ⭐️
 
 If you want to deploy your own tutorials repository, you can use any of the ["-tutorials" repos](https://github.com/orgs/rse-ops/repositories?q=-tutorials&type=all&language=&sort=) in the rse-ops organization as a template! The design is outlined
-here, and instructions described:
+here, and instructions described. Basically, you'll be adding [workflows](workflows) to your `.github/workflows` to do 
+each of the following.
 
-### Contributor CI
+### Site and Contributor CI
 
-Add a [contributor-ci.yaml](contributor-ci.yaml) file to the root of your repository.
+Each workflow repository deploys its own site and project (repository) metadata.
+The initial generation of this site (and continued generation of the metadata, nightly)
+is determined by the [workflows/update-data.yaml](workflows/update-data.yaml) action.
+First, add a [contributor-ci.yaml](contributor-ci.yaml) file to the root of your repository.
 It should include (under repos) the GitHub identifier for the main project you
 are demo-ing.
 
@@ -48,8 +52,32 @@ repos:
 ```
 
 In the example above, we are showcasing [https://github.com/flux-framework/flux-core](https://github.com/flux-framework/flux-core).
-You can add this action to your workflows via the [workflows/update-data.yaml](workflows/update-data.yaml) example.
+Then, you can finalize the generation and using the action by adding
+the [workflows/update-data.yaml](workflows/update-data.yaml) example to your `.github/workflows` directory.
 
+
+### Container Builds
+
+Each workflow repository deploys any needed automated builds, each defined by a `Dockerfile`
+in the root of a container directory. To support this build, we use [uptodate](https://github.com/vsoch/uptodate)
+that requires an `uptodate.yaml` file in the root of a tutorial. As an example, here is how
+to build a container with one build argument for a `22.04` version of ubuntu:
+
+```
+dockerbuild:
+
+  build_args:
+    ubuntu_version:
+      key: ubuntu
+      versions:
+       - "22.04"
+```
+
+The initial generation of this site (and continued generation of the metadata, nightly)
+is determined by the [workflows/update-data.yaml](workflows/update-data.yaml) action.
+It's again helpful to look at examples in ["-tutorials" repos](https://github.com/orgs/rse-ops/repositories?q=-tutorials&type=all&language=&sort=) for how these files (alongside build args) are used. If you are comfortable with 
+Docker, you basically are defining the build args to use in your Dockerfile via
+this file, and it can be a matrix.
 
 ## 🔍️ Details 🔎️
 
