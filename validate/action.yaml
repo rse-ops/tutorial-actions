@@ -1,0 +1,52 @@
+name: validate RADIUSS tutorials repository
+description: Ensure formatting is correct of docs, etc.
+branding:
+  icon: activity
+  color: blue
+inputs:
+  root:
+    description: Root of tutorials (defaults to root of repository)
+    required: false
+
+runs:
+  using: composite
+  steps:
+  - name: Set Root of Tutorials
+    env:
+      root: ${{ inputs.root }}
+    run: |
+      # Default to repository root if root undefined
+      if [[ "${root}" == "" ]]; then
+          root=$(pwd)
+      fi
+      printf "Root is ${root}\n"
+      ls ${root}
+      echo "root=${root}" >> $GITHUB_ENV
+    shell: bash
+
+  - uses: ruby/setup-ruby@e5517072e87f198d9533967ae13d97c11b604005 # v1.99.0
+    with:
+      ruby-version: 2.7
+
+  - name: Build Site
+    env:
+      root: ${{ env.root }}
+    run: |
+      cd ${root}/docs/
+      bundle install
+      bundle exec jekyll build
+      cd -
+    shell: bash
+
+  - name: Install Action Updater
+    env:
+      action_path: ${{ github.action_path }}
+    run: pip install -r ${action_path}/requirements.txt
+    shell: bash
+
+  - name: Validate
+    env:
+      action_path: ${{ github.action_path }}
+      root: ${{ env.root }}
+    run: python ${action_path}/scripts/validate.py ${root}/docs/_site/api/tutorials.json
+    shell: bash

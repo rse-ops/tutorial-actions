@@ -2,14 +2,13 @@
 
 These actions support creation of a RADIUSS Tutorial. 
 
-
 ## ❓️ Frequently Asked Questions ❓️
 
 ### What is a tutorial?
 
 A tutorial is a lab notebook (or similar environment) that can be requested
 by a user to try out software. By way of providing metadata and assets in a
-predictibly organized version-controlled format, we can easily deploy
+predictibly organized version-controllued format, we can easily deploy
 tutorials.
 
 ### What is a tutorial repository?
@@ -25,10 +24,14 @@ A tutorial repostiory provides:
 ### What are the actions here?
 
 The actions here provide both templates (e.g., workflow files you can copy)
-and actions to include within to help you to deploy your tutorials.
+and actions to include within to help you to deploy your tutorials. To continue reading,
+you can read more about:
 
+ - [⭐️ Automation ⭐️](#%EF%B8%8F-automation-%EF%B8%8F): and workflows to support your tutorials repository.
+ - [🔍️ Details 🔎️](#%EF%B8%8F-details-%EF%B8%8F): that describe structure.
+ 
 
-## ⭐️ Instructions for Setup ⭐️
+## ⭐️ Automation ⭐️
 
 If you want to deploy your own tutorials repository, you can use any of the ["-tutorials" repos](https://github.com/orgs/rse-ops/repositories?q=-tutorials&type=all&language=&sort=) in the rse-ops organization as a template! The design is outlined
 here, and instructions described. Basically, you'll be adding [workflows](workflows) to your `.github/workflows` to do 
@@ -55,8 +58,22 @@ In the example above, we are showcasing [https://github.com/flux-framework/flux-
 Then, you can finalize the generation and using the action by adding
 the [workflows/update-data.yaml](workflows/update-data.yaml) example to your `.github/workflows` directory.
 
+### ✅️ Validation ✅️
 
-### Container Builds
+The metadata that your site provides (where the site is generated and maintained via the action above)
+must conform to a specific schema, and the container that it promises must be pull-able. To ensure
+that your generated metadata is valid, you can use the the [validate](validate) action, and an example is
+provided in the [workflows/validate.yaml](workflows/validate.yaml) workflow. Add this to your `.github/workflows`
+to activate it in your tutorials repository. For validation, we build the site that displays the tutorials
+and check the following:
+
+1. Your tutorial names are all lowercase, with only special characters `-` allowed
+2. A title, container, and project (with github name) are defined
+3. The GitHub name only has one slash (no git@ or https, etc.)
+4. The docker container needs to be pullable.
+
+
+### 🚧️ Container Builds 🚧️
 
 Each workflow repository deploys any needed automated builds, each defined by a `Dockerfile`
 in the root of a container directory. To support this build, we use [uptodate](https://github.com/vsoch/uptodate)
@@ -81,7 +98,7 @@ this file, and it can be a matrix.
 
 ## 🔍️ Details 🔎️
 
-### Tutorials
+### Repository Structure
 
 Each tutorial is basically a notebook and a base container, where the base
 container should have jupyter installed and your tutorial software. Each tutorial
@@ -124,8 +141,40 @@ is provided in the tutorial folder, this should build the base, and this is spec
 in `container.yaml`. By default, the containers will build to `ghcr.io/<org>/<repository>/<tutorial>`.
 For the tutorial here, we might see `ghcr.io/rse-ops/flux-tutorial:latest`.
 
+### Metadata
+
+Each tutorial folder has a `tutorial.yaml` file that will be used to deploy
+the tutorial and to generate the site (with metadata). Importantly, you should
+provide the name of an associated project repository on GitHub that will provide
+more metadata about the project, along with labels that map to instance preferences
+for each. This is currently a limited set, and will be expanded.
+
+```yaml
+title: "Flux Tutorial: 2022 for RADIUSS"
+container:
+  name: ghcr.io/rse-ops/flux-radiuss-aws-2022:jupyter-3.0.0
+  # This should be changed for a production deployment
+  env:
+    name: GLOBAL_PASSWORD
+    optional: true
+  ports:
+    - 443:443
+project:
+  github: flux-framework/flux-core  
+notebooks:
+  - name: 01-radiuss-aws-flux.ipynb
+    title: Flux Jobs Tutorial
+```
+
+We currently ask for a GitHub identifier to retrieve metadata about the project.
+The current assumption above is that tutorials are grouped based on similar resource needs using the same container.
+
 
 ### Suggested Interactions
+
+The following are suggested setups for your tutorials. You are free to choose
+to do this however you like, however the assumption is that we will deploy
+a container that has some service on a port.
 
 #### Environment Variables
 
@@ -169,50 +218,6 @@ Your login information is:
 
 Have fun! ⭐️🦄️⭐️
 ```
-
-### Metadata
-
-Each tutorial folder has a `tutorial.yaml` file that will be used to deploy
-the tutorial and to generate the site (with metadata). Importantly, you should
-provide the name of an associated project repository on GitHub that will provide
-more metadata about the project, along with labels that map to instance preferences
-for each. This is currently a limited set, and will be expanded.
-
-```yaml
-title: "Flux Tutorial: 2022 for RADIUSS"
-container:
-  name: ghcr.io/rse-ops/flux-radiuss-aws-2022:jupyter-3.0.0
-  # This should be changed for a production deployment
-  env:
-    name: GLOBAL_PASSWORD
-    optional: true
-  ports:
-    - 443:443
-project:
-  github: flux-framework/flux-core  
-notebooks:
-  - name: 01-radiuss-aws-flux.ipynb
-    title: Flux Jobs Tutorial
-```
-
-We currently ask for a GitHub identifier to retrieve metadata about the project.
-The current assumption above is that tutorials are grouped based on similar resource needs using the same container.
-
-### Site
-
-The only change needed in the [docs](docs) folder is to update the [_config.yml](_config.yml)
-to include your repository metadata.
-
-### Validation
-
-Your tutorial metadata will be validated with the [.github/workflows/main.yaml](.github/workflows/main.yaml).
-More specifically, we build the site static json API that will be used by associated tools to deploy
-the tutorials, and check the following:
-
-1. Your tutorial names are all lowercase, with only special characters `-` allowed
-2. A title, container, and project (with github name) are defined
-3. The GitHub name only has one slash (no git@ or https, etc.)
-4. The docker container needs to be pullable.
 
 License
 -------
