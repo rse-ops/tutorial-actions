@@ -151,14 +151,23 @@ for each. This is currently a limited set, and will be expanded.
 
 ```yaml
 title: "Flux Tutorial: 2022 for RADIUSS"
+
+resources:
+  cpus: 1      # number of cores
+  memory: 4000 # This should be a number in GB
+
 container:
   name: ghcr.io/rse-ops/flux-radiuss-aws-2022:jupyter-3.0.0
   # This should be changed for a production deployment
   env:
     name: GLOBAL_PASSWORD
     optional: true
+  # Note that ports 80 and 443 are automatically exposed, these should be extra
   ports:
-    - 443:443
+    - 8000:8000
+
+  # This is the main port to tell the user about
+  expose: 8000
 project:
   github: flux-framework/flux-core  
 notebooks:
@@ -167,6 +176,8 @@ notebooks:
 ```
 
 We currently ask for a GitHub identifier to retrieve metadata about the project.
+Note that for the resources spec, we use [Cloud select](https://converged-computing.github.io/cloud-select/#/) to find a cost effective 
+instance, given that the tutorial runner is using a region and cloud that we have prices for.
 The current assumption above is that tutorials are grouped based on similar resource needs using the same container.
 
 
@@ -222,7 +233,7 @@ Have fun! ⭐️🦄️⭐️
 License
 -------
 
-Copyright (c) 2022, Lawrence Livermore National Security, LLC. 
+Copyright (c) 2022-2023, Lawrence Livermore National Security, LLC. 
 Produced at the Lawrence Livermore National Laboratory.
 
 RADIUSS is licensed under the MIT license [LICENSE](./LICENSE).
